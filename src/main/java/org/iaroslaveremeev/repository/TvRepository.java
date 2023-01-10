@@ -18,7 +18,7 @@ public class TvRepository {
         ObjectMapper objectMapper = new ObjectMapper();
         try(BufferedReader bufferedReader = new BufferedReader(new FileReader(Constants.FILE_NAME))){
             this.tvs = objectMapper.readValue(bufferedReader, new TypeReference<>() {});
-        } catch (IOException e) {}
+        } catch (IOException ignored) {}
     }
 
     public int getMaxId(ArrayList<TV> tvs){
@@ -35,7 +35,7 @@ public class TvRepository {
         ObjectMapper objectMapper = new ObjectMapper();
         try(BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(Constants.FILE_NAME))){
             objectMapper.writeValue(bufferedWriter, this.tvs);
-        } catch (IOException e) {}
+        } catch (IOException ignored) {}
     }
 
     public TV getTvById(int id){
@@ -49,35 +49,20 @@ public class TvRepository {
         return tvs;
     }
 
-    public TV deleteById(int id){
-        for (TV tv : tvs) {
-            if (tv.getId() == id) {
-                this.tvs.remove(tv);
-                return tv;
-            }
-        }
+    public void deleteById(int id){
+        this.tvs.removeIf(item -> item.getId() == id);
         ObjectMapper objectMapper = new ObjectMapper();
         try(BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(Constants.FILE_NAME))){
             objectMapper.writeValue(bufferedWriter, this.tvs);
-        } catch (IOException e) {}
-        return null;
+        } catch (IOException ignored) {}
     }
 
-    public TV substitute(TV newTv){
-        for (int i = 0; i < tvs.size(); i++) {
-            if (tvs.get(i).getId() == newTv.getId()){
-                TV toRemove = tvs.get(i);
-                this.tvs.remove(toRemove);
-                this.tvs.add(i, newTv);
-
-                ObjectMapper objectMapper = new ObjectMapper();
-                try(BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(Constants.FILE_NAME))){
-                    objectMapper.writeValue(bufferedWriter, this.tvs);
-                } catch (IOException e) {}
-                return toRemove;
-            }
-        }
-
-        return null;
+    public void substitute(TV newTv){
+        this.tvs = (ArrayList<TV>) this.tvs.stream().map(oldTv -> oldTv.getId() == newTv.getId() ? newTv : oldTv)
+                .collect(Collectors.toList());
+        ObjectMapper objectMapper = new ObjectMapper();
+        try(BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(Constants.FILE_NAME))){
+            objectMapper.writeValue(bufferedWriter, this.tvs);
+        } catch (IOException ignored) {}
     }
 }
